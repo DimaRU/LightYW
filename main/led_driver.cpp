@@ -56,34 +56,6 @@ static esp_err_t app_driver_light_set_temperature(led_indicator_handle_t handle,
 #endif
 }
 
-// static esp_err_t app_driver_light_set_hue(led_indicator_handle_t handle, esp_matter_attr_val_t *val)
-// {
-//     int value = REMAP_TO_RANGE(val->val.u8, MATTER_HUE, STANDARD_HUE);
-// #if CONFIG_BSP_LEDS_NUM > 0
-//     led_indicator_ihsv_t hsv;
-//     hsv.value = led_indicator_get_hsv(handle);
-//     hsv.h = value;
-//     return led_indicator_set_hsv(handle, hsv.value);
-// #else
-//     ESP_LOGI(TAG, "LED set hue: %d", value);
-//     return ESP_OK;
-// #endif
-// }
-
-// static esp_err_t app_driver_light_set_saturation(led_indicator_handle_t handle, esp_matter_attr_val_t *val)
-// {
-//     int value = REMAP_TO_RANGE(val->val.u8, MATTER_SATURATION, STANDARD_SATURATION);
-// #if CONFIG_BSP_LEDS_NUM > 0
-//     led_indicator_ihsv_t hsv;
-//     hsv.value = led_indicator_get_hsv(handle);
-//     hsv.s = value;
-//     return led_indicator_set_hsv(handle, hsv.value);
-// #else
-//     ESP_LOGI(TAG, "LED set saturation: %d", value);
-//     return ESP_OK;
-// #endif
-// }
-
 esp_err_t app_driver_attribute_update(app_driver_handle_t driver_handle, 
                                       uint32_t cluster_id,
                                       uint32_t attribute_id, 
@@ -103,10 +75,6 @@ esp_err_t app_driver_attribute_update(app_driver_handle_t driver_handle,
         break;
     case ColorControl::Id:
         switch (attribute_id) {
-        // case ColorControl::Attributes::CurrentHue::Id:
-        //     return app_driver_light_set_hue(handle, val);
-        // case ColorControl::Attributes::CurrentSaturation::Id:
-        //     return app_driver_light_set_saturation(handle, val);
         case ColorControl::Attributes::ColorTemperatureMireds::Id:
             return app_driver_light_set_temperature(handle, val);
         }
@@ -132,17 +100,6 @@ esp_err_t app_driver_light_set_defaults(uint16_t endpoint_id)
     attribute::get_val(attribute, &val);
     switch (val.val.u8)
     {
-    // case (uint8_t)ColorControl::ColorMode::kCurrentHueAndCurrentSaturation:
-    //     /* Setting hue */
-    //     ESP_LOGI(TAG, "LED set default hue");
-    //     attribute = attribute::get(endpoint_id, ColorControl::Id, ColorControl::Attributes::CurrentHue::Id);
-    //     attribute::get_val(attribute, &val);
-    //     err |= app_driver_light_set_hue(handle, &val);
-    //     /* Setting saturation */
-    //     attribute = attribute::get(endpoint_id, ColorControl::Id, ColorControl::Attributes::CurrentSaturation::Id);
-    //     attribute::get_val(attribute, &val);
-    //     err |= app_driver_light_set_saturation(handle, &val);
-    //     break;
     case (uint8_t)ColorControl::ColorMode::kColorTemperature:
         /* Setting temperature */
         ESP_LOGI(TAG, "LED set default temperature");

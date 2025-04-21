@@ -22,7 +22,7 @@ static bool perform_factory_reset = false;
 static const button_config_t button_config = {
     .type = BUTTON_TYPE_GPIO,
     .gpio_button_config = {
-        .gpio_num = 9,
+        .gpio_num = CONFIG_BUTTON_GPIO,
         .active_level = 0,
     },
 };

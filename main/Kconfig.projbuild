@@ -1,0 +1,39 @@
+menu "LightYW Matter Configuration"
+    config DEFAULT_BRIGHTNESS
+        int "Default brigthness"
+        default 64
+        range 0 254
+
+    config COLOR_TEMP_MIN
+        int "Minimum hardware supported color temperature"
+        default 3000
+        help
+            Minimum hardware supported color temperature in kelvins
+
+    config COLOR_TEMP_MAX
+        int "Maximum hardware supported color temperature"
+        default 6500
+        help
+            Maximum hardware supported color temperature in kelvins
+
+    config COLOR_TEMP_DEFAULT
+        int "Startup color temperature"
+        default 4700
+        help 
+            Startup color temperature in kelvins
+endmenu
+
+menu "LightYW Hardware Configuration"
+    config BUTTON_GPIO
+        int "Button GPIO number"
+        default 9
+        
+    config LED_YELLOW_GPIO    
+        int "Yellow led GPIO number"
+        default 4
+
+    config LED_WHITE_GPIO    
+        int "White led GPIO number"
+        default 5
+
+endmenu

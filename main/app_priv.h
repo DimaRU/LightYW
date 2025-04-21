@@ -1,6 +1,6 @@
 /*
-    Common definitions
-*/
+ *   Common definitions
+ */
 
 #pragma once
 
@@ -25,10 +25,6 @@
 
 /** Default attribute values used during initialization */
 #define DEFAULT_POWER true
-#define DEFAULT_BRIGHTNESS 64
-#define COLOR_TEMP_MIN 3000
-#define COLOR_TEMP_MAX 6500
-#define COLOR_TEMP_DEFAULT 4700
 
 typedef void *app_driver_handle_t;
 
