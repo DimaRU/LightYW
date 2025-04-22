@@ -24,7 +24,7 @@ typedef struct {
     ledc_channel_config_t* config;
     QueueHandle_t fadeEventQueue;
     int current;
-  } ChanBrigthness;
+  } FadeConfig;
 
   ledc_timer_config_t ledc_timer = {
       .speed_mode = LEDC_LOW_SPEED_MODE,        // timer mode
@@ -53,20 +53,21 @@ ledc_channel_config_t ledcChannel[] = {
     },
 };
 
-ChanBrigthness brigthnessWarm = {
+FadeConfig fadeConfigs[2];
+FadeConfig brigthnessWarm = {
     .config = &ledcChannel[0],
     .fadeEventQueue = nullptr,
     .current = 0,
 };
 
-ChanBrigthness brigthnessCold = {
+FadeConfig brigthnessCold = {
     .config = &ledcChannel[1],
     .fadeEventQueue = nullptr,
     .current = 0,
 };
 
 void fadeTask( void *pvParameters ) {
-    ChanBrigthness* fade = (ChanBrigthness*) pvParameters;
+    FadeConfig* fade = (FadeConfig*) pvParameters;
     int32_t target;
 
     printf("Init fade task chan %d\n", fade->config->channel);
@@ -101,6 +102,7 @@ static void app_driver_light_set_pwm(int8_t brightness, int16_t temperature) {
         return;
     }
 
+//    float colorCoeff = tem
     int32_t warm;
     int32_t cold;
 
@@ -207,16 +209,17 @@ esp_err_t app_driver_light_set_defaults(uint16_t endpoint_id)
 void app_driver_light_init()
 {
     ledc_timer_config(&ledc_timer);
-    ledc_channel_config(&ledcChannel[0]);
-    ledc_channel_config(&ledcChannel[1]);
-  
+
+    for(int chan = 0; chan < 2; chan++) {
+        fadeConfigs[chan].config = &ledcChannel[chan];
+        fadeConfigs[chan].fadeEventQueue = xQueueCreate(10, sizeof(int32_t));
+        fadeConfigs[chan].current = 0;
+        ledc_channel_config(&ledcChannel[chan]);
+
+        const char *name = ledcChannel[chan].gpio_num == CONFIG_LED_WARM_GPIO ? "warmTask":"coldTask";
+        xTaskCreate(fadeTask, name, 2048, &fadeConfigs[chan], 10, nullptr);
+    }
+    
     ledc_fade_func_install(0);
-  
-    brigthnessWarm.fadeEventQueue = xQueueCreate(10, sizeof(int32_t));
-    xTaskCreate(fadeTask, "warmTask", 2048, &brigthnessWarm, 10, nullptr);
-
-    brigthnessCold.fadeEventQueue = xQueueCreate(10, sizeof(int32_t));
-    xTaskCreate(fadeTask, "coldTask", 2048, &brigthnessCold, 10, nullptr);
-
     app_driver_light_set_pwm(CONFIG_DEFAULT_BRIGHTNESS, CONFIG_COLOR_TEMP_DEFAULT);
 }
