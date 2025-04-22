@@ -13,14 +13,10 @@
 
 /** Standard max values (used for remapping attributes) */
 #define STANDARD_BRIGHTNESS 255
-#define STANDARD_HUE 360
-#define STANDARD_SATURATION 255
 #define STANDARD_TEMPERATURE_FACTOR 1000000
 
 /** Matter max values (used for remapping attributes) */
 #define MATTER_BRIGHTNESS 254
-#define MATTER_HUE 254
-#define MATTER_SATURATION 254
 #define MATTER_TEMPERATURE_FACTOR 1000000
 
 /** Default attribute values used during initialization */
@@ -32,19 +28,15 @@ typedef void *app_driver_handle_t;
  *
  * This initializes the light driver associated with the selected board.
  *
- * @return Handle on success.
- * @return NULL in case of failure.
  */
-app_driver_handle_t app_driver_light_init();
+void app_driver_light_init();
 
 /** Initialize the button driver
  *
  * This initializes the button driver associated with the selected board.
  *
- * @return Handle on success.
- * @return NULL in case of failure.
  */
-app_driver_handle_t app_driver_button_init(uint16_t *light_endpoint_id);
+void app_driver_button_init(uint16_t *light_endpoint_id);
 
 /** Driver Update
  *
@@ -58,8 +50,7 @@ app_driver_handle_t app_driver_button_init(uint16_t *light_endpoint_id);
  * @return ESP_OK on success.
  * @return error in case of failure.
  */
-esp_err_t app_driver_attribute_update(app_driver_handle_t driver_handle, 
-                                      uint32_t cluster_id,
+esp_err_t app_driver_attribute_update(uint32_t cluster_id,
                                       uint32_t attribute_id, 
                                       esp_matter_attr_val_t *val);
 

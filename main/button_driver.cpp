@@ -60,14 +60,12 @@ static void button_factory_reset_released_cb(void *arg, void *data)
     }
 }
 
-app_driver_handle_t app_driver_button_init(uint16_t *light_endpoint_id) {
+void app_driver_button_init(uint16_t *light_endpoint_id) {
 	button_handle_t button_handle = iot_button_create(&button_config);
-    ABORT_APP_ON_FAILURE(button_handle != nullptr, ESP_LOGE(TAG, "Failed to create Matter node"));
+    ABORT_APP_ON_FAILURE(button_handle != nullptr, ESP_LOGE(TAG, "Failed to create button handle"));
 	esp_err_t err = ESP_OK;
 	err |= iot_button_register_cb(button_handle, BUTTON_PRESS_DOWN, app_driver_button_toggle_cb, light_endpoint_id);
     err |= iot_button_register_cb(button_handle, BUTTON_LONG_PRESS_HOLD, button_factory_reset_pressed_cb, NULL);
     err |= iot_button_register_cb(button_handle, BUTTON_PRESS_UP, button_factory_reset_released_cb, NULL);
     ESP_ERROR_CHECK(err);
-
-    return (app_driver_handle_t)button_handle;
 }

@@ -59,7 +59,7 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg)
         break;
 
     case chip::DeviceLayer::DeviceEventType::kCommissioningComplete:
-        ESP_LOGI(TAG, "Commissioning complete");
+        ESP_LOGI(TAG, "Commissioning complete, fabric count: %u", chip::Server::GetInstance().GetFabricTable().FabricCount());
         break;
 
     case chip::DeviceLayer::DeviceEventType::kFailSafeTimerExpired:
@@ -84,9 +84,10 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg)
 
     case chip::DeviceLayer::DeviceEventType::kFabricRemoved:
         {
-            ESP_LOGI(TAG, "Fabric removed successfully");
+            ESP_LOGI(TAG, "Fabric removed successfully, left: %u", chip::Server::GetInstance().GetFabricTable().FabricCount());
             if (chip::Server::GetInstance().GetFabricTable().FabricCount() == 0)
             {
+                ESP_LOGI(TAG, "Last fabric removed");
                 chip::CommissioningWindowManager & commissionMgr = chip::Server::GetInstance().GetCommissioningWindowManager();
                 constexpr auto kTimeoutSeconds = chip::System::Clock::Seconds16(k_timeout_seconds);
                 if (!commissionMgr.IsCommissioningWindowOpen())
@@ -160,8 +161,7 @@ static esp_err_t app_attribute_update_cb(attribute::callback_type_t type,
     if (endpoint_id != light_endpoint_id) {
         return ESP_OK;
     }
-    app_driver_handle_t driver_handle = (app_driver_handle_t)priv_data;
-    return app_driver_attribute_update(driver_handle, cluster_id, attribute_id, val);
+    return app_driver_attribute_update(cluster_id, attribute_id, val);
 }
 
 extern "C" void app_main()
@@ -178,7 +178,7 @@ extern "C" void app_main()
     nvs_flash_init();
 
     /* Initialize led driver */
-    app_driver_handle_t light_handle = app_driver_light_init();
+    app_driver_light_init();
 
     /* Create a Matter node and add the mandatory Root Node device type on endpoint 0 */
     node::config_t node_config;
@@ -191,7 +191,7 @@ extern "C" void app_main()
     light_config.on_off.on_off = DEFAULT_POWER;
     light_config.on_off.lighting.start_up_on_off = nullptr;
     light_config.level_control.current_level = CONFIG_DEFAULT_BRIGHTNESS;
-    light_config.level_control.on_level = CONFIG_DEFAULT_BRIGHTNESS;
+    light_config.level_control.on_level = nullptr;
     light_config.level_control.lighting.start_up_current_level = CONFIG_DEFAULT_BRIGHTNESS;
  
     light_config.color_control.color_mode = (uint8_t)ColorControl::ColorMode::kColorTemperature;
@@ -200,10 +200,10 @@ extern "C" void app_main()
     light_config.color_control.color_temperature.color_temp_physical_max_mireds = REMAP_TO_RANGE_INVERSE(CONFIG_COLOR_TEMP_MIN, MATTER_TEMPERATURE_FACTOR);
     light_config.color_control.color_temperature.color_temp_physical_min_mireds = REMAP_TO_RANGE_INVERSE(CONFIG_COLOR_TEMP_MAX, MATTER_TEMPERATURE_FACTOR);
     light_config.color_control.color_temperature.couple_color_temp_to_level_min_mireds = REMAP_TO_RANGE_INVERSE(CONFIG_COLOR_TEMP_MAX, MATTER_TEMPERATURE_FACTOR);
-    light_config.color_control.color_temperature.startup_color_temperature_mireds = REMAP_TO_RANGE_INVERSE(CONFIG_COLOR_TEMP_DEFAULT, MATTER_TEMPERATURE_FACTOR);;
+    light_config.color_control.color_temperature.startup_color_temperature_mireds = REMAP_TO_RANGE_INVERSE(CONFIG_COLOR_TEMP_DEFAULT, MATTER_TEMPERATURE_FACTOR);
     
     // endpoint handles can be used to add/modify clusters.
-    endpoint_t *endpoint = extended_color_light::create(node, &light_config, ENDPOINT_FLAG_NONE, light_handle);
+    endpoint_t *endpoint = extended_color_light::create(node, &light_config, ENDPOINT_FLAG_NONE, nullptr);
     ABORT_APP_ON_FAILURE(endpoint != nullptr, ESP_LOGE(TAG, "Failed to create extended color light endpoint"));
     
     light_endpoint_id = endpoint::get_id(endpoint);
@@ -222,7 +222,7 @@ extern "C" void app_main()
     attribute::set_deferred_persistence(color_temp_attribute);
 
     // Install button driver
-    app_driver_handle_t button_handle = app_driver_button_init(&light_endpoint_id);
+    app_driver_button_init(&light_endpoint_id);
 
 
 #if CHIP_DEVICE_CONFIG_ENABLE_THREAD && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
@@ -260,6 +260,7 @@ extern "C" void app_main()
     } else {
         ESP_LOGI(TAG, "Unprovisioned");
     }
+    ESP_LOGI(TAG, "Fabric count %u", chip::Server::GetInstance().GetFabricTable().FabricCount());
 
 #if CONFIG_ENABLE_CHIP_SHELL
     esp_matter::console::diagnostics_register_commands();
