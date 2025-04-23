@@ -4,17 +4,17 @@ menu "LightWarmCold Matter Configuration"
         default 64
         range 0 254
 
-    config COLOR_TEMP_MIN
+    config COLOR_TEMP_WARM
         int "Warm led color temperature"
         default 3000
         help
-            Minimum hardware supported color temperature in kelvins
+            Warm led color temperature in kelvins (min)
 
-    config COLOR_TEMP_MAX
+    config COLOR_TEMP_COLD
         int "Cold led color temperature"
         default 6500
         help
-            Maximum hardware supported color temperature in kelvins
+            Cold led color temperature in kelvins (max)
 
     config COLOR_TEMP_DEFAULT
         int "Startup color temperature"

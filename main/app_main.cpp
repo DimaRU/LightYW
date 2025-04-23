@@ -197,11 +197,12 @@ extern "C" void app_main()
     light_config.color_control.color_mode = (uint8_t)ColorControl::ColorMode::kColorTemperature;
     light_config.color_control.enhanced_color_mode = (uint8_t)ColorControl::ColorMode::kColorTemperature;
  
-    light_config.color_control.color_temperature.color_temp_physical_max_mireds = REMAP_TO_RANGE_INVERSE(CONFIG_COLOR_TEMP_MIN, MATTER_TEMPERATURE_FACTOR);
-    light_config.color_control.color_temperature.color_temp_physical_min_mireds = REMAP_TO_RANGE_INVERSE(CONFIG_COLOR_TEMP_MAX, MATTER_TEMPERATURE_FACTOR);
-    light_config.color_control.color_temperature.couple_color_temp_to_level_min_mireds = REMAP_TO_RANGE_INVERSE(CONFIG_COLOR_TEMP_MAX, MATTER_TEMPERATURE_FACTOR);
+    light_config.color_control.color_temperature.color_temp_physical_max_mireds = REMAP_TO_RANGE_INVERSE(CONFIG_COLOR_TEMP_WARM, MATTER_TEMPERATURE_FACTOR);
+    light_config.color_control.color_temperature.color_temp_physical_min_mireds = REMAP_TO_RANGE_INVERSE(CONFIG_COLOR_TEMP_COLD, MATTER_TEMPERATURE_FACTOR);
+    light_config.color_control.color_temperature.couple_color_temp_to_level_min_mireds = REMAP_TO_RANGE_INVERSE(CONFIG_COLOR_TEMP_COLD, MATTER_TEMPERATURE_FACTOR);
     light_config.color_control.color_temperature.startup_color_temperature_mireds = REMAP_TO_RANGE_INVERSE(CONFIG_COLOR_TEMP_DEFAULT, MATTER_TEMPERATURE_FACTOR);
-    
+    ESP_LOGI(TAG, "Color temp min - max: %u - %u", light_config.color_control.color_temperature.color_temp_physical_min_mireds, light_config.color_control.color_temperature.color_temp_physical_max_mireds);
+
     // endpoint handles can be used to add/modify clusters.
     endpoint_t *endpoint = extended_color_light::create(node, &light_config, ENDPOINT_FLAG_NONE, nullptr);
     ABORT_APP_ON_FAILURE(endpoint != nullptr, ESP_LOGE(TAG, "Failed to create extended color light endpoint"));

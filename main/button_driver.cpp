@@ -40,6 +40,18 @@ static void app_driver_button_toggle_cb(void *arg, void *data)
     attribute::get_val(attribute, &val);
     val.val.b = !val.val.b;
     attribute::update(endpoint_id, cluster_id, attribute_id, &val);
+
+    if (val.val.b) {
+        cluster_id = LevelControl::Id;
+        attribute_id = LevelControl::Attributes::CurrentLevel::Id;
+        attribute = attribute::get(endpoint_id, cluster_id, attribute_id);
+        attribute::get_val(attribute, &val);
+        auto level = val.val.u8;
+        val.val.u8 = 1;
+        attribute::update(endpoint_id, cluster_id, attribute_id, &val);
+        val.val.u8 = level;
+        attribute::update(endpoint_id, cluster_id, attribute_id, &val);
+    }
 }
 
 
