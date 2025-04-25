@@ -12,7 +12,7 @@
 #include "driver/ledc.h"
 #include "soc/ledc_reg.h"
 
-void fadeTask( void *pvParameters );
+static void fadeTask( void *pvParameters );
 
 using namespace chip::app::Clusters;
 using namespace esp_matter;
@@ -29,13 +29,13 @@ typedef struct {
     int32_t current;
   } FadeConfig;
 
-  ledc_timer_config_t ledc_timer = {
-      .speed_mode = LEDC_LOW_SPEED_MODE,        // timer mode
-      .duty_resolution = LEDC_TIMER_12_BIT,     // resolution of PWM duty
-      .timer_num = LEDC_TIMER_0,                // timer index
-      .freq_hz = CONFIG_PWM_FREQUENCY,          // frequency of PWM signal
-      .clk_cfg = LEDC_AUTO_CLK,                 // Auto select the source clock
-  };
+ledc_timer_config_t ledc_timer = {
+    .speed_mode = LEDC_LOW_SPEED_MODE,        // timer mode
+    .duty_resolution = LEDC_TIMER_12_BIT,     // resolution of PWM duty
+    .timer_num = LEDC_TIMER_0,                // timer index
+    .freq_hz = CONFIG_PWM_FREQUENCY,          // frequency of PWM signal
+    .clk_cfg = LEDC_AUTO_CLK,                 // Auto select the source clock
+};
 
 ledc_channel_config_t ledcChannel[] = {
     {
@@ -100,7 +100,7 @@ static void app_driver_light_set_pwm(uint8_t brightness, int16_t temperature) {
     if (coldCoeff > 1) {
         coldCoeff = 1;
     }
-    ESP_LOGI(TAG, "tempCoeff: %f, brCoeff: %f", tempCoeff, brightnessCoeff);
+    // ESP_LOGI(TAG, "tempCoeff: %f, brCoeff: %f", tempCoeff, brightnessCoeff);
 
     int32_t dutyMax = 1 << ledc_timer.duty_resolution;
     int32_t warmPWM = warmCoeff * dutyMax;

@@ -193,6 +193,7 @@ extern "C" void app_main()
     light_config.level_control.current_level = CONFIG_DEFAULT_BRIGHTNESS;
     light_config.level_control.on_level = nullptr;
     light_config.level_control.lighting.start_up_current_level = CONFIG_DEFAULT_BRIGHTNESS;
+    // light_config.level_control.options = (uint8_t)LevelControl::OptionsBitmap::kCoupleColorTempToLevel + (uint8_t)LevelControl::OptionsBitmap::kCoupleColorTempToLevel;
  
     light_config.color_control.color_mode = (uint8_t)ColorControl::ColorMode::kColorTemperature;
     light_config.color_control.enhanced_color_mode = (uint8_t)ColorControl::ColorMode::kColorTemperature;

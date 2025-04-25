@@ -7,10 +7,10 @@
         "IDF_TARGET": "esp32c6"
     },
     "idf.openOcdConfigs": [
-        "board/esp32c6-ftdi.cfg"
+        "board/esp32c6-builtin.cfg"
     ],
     "idf.flashType": "UART",
-    "idf.port": "/dev/tty.usbserial-240",
+    "idf.port": "/dev/tty.usbmodem2401",
     "files.associations": {
         "*.ipp": "cpp",
         "*.inc": "cpp",
