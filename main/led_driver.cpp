@@ -157,8 +157,7 @@ void app_driver_attribute_update(uint32_t cluster_id,
         }
         break;
     case ColorControl::Id:
-        switch (attribute_id) {
-        case ColorControl::Attributes::ColorTemperatureMireds::Id:
+        if (attribute_id == ColorControl::Attributes::ColorTemperatureMireds::Id) {
             app_driver_light_set_temperature(val);
         }
         break;
