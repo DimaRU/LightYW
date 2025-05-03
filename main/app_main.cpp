@@ -161,7 +161,8 @@ static esp_err_t app_attribute_update_cb(attribute::callback_type_t type,
     if (endpoint_id != light_endpoint_id) {
         return ESP_OK;
     }
-    return app_driver_attribute_update(cluster_id, attribute_id, val);
+    app_driver_attribute_update(cluster_id, attribute_id, val);
+    return ESP_OK;
 }
 
 extern "C" void app_main()

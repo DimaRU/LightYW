@@ -114,7 +114,7 @@ static void app_driver_light_set_pwm(uint8_t brightness, int16_t temperature) {
     xQueueSend(fadeEventQueue, pwm, 0);
 }
 
-static esp_err_t app_driver_light_set_power(esp_matter_attr_val_t *val)
+static void app_driver_light_set_power(esp_matter_attr_val_t *val)
 {
     ESP_LOGI(TAG, "LED set power: %d", val->val.b);
     if (val->val.b) {
@@ -125,55 +125,48 @@ static esp_err_t app_driver_light_set_power(esp_matter_attr_val_t *val)
         app_driver_light_set_pwm(0, currentColorTemperature);
     }
     powerOn = val->val.b;
-    return ESP_OK;
 }
 
-static esp_err_t app_driver_light_set_brightness(esp_matter_attr_val_t *val)
+static void app_driver_light_set_brightness(esp_matter_attr_val_t *val)
 {
     // int value = REMAP_TO_RANGE(val->val.u8, MATTER_BRIGHTNESS, STANDARD_BRIGHTNESS);
     ESP_LOGI(TAG, "LED set brightness: %d", val->val.u8);
     app_driver_light_set_pwm(val->val.u8, currentColorTemperature);
-
-    return ESP_OK;
 }
 
-static esp_err_t app_driver_light_set_temperature(esp_matter_attr_val_t *val)
+static void app_driver_light_set_temperature(esp_matter_attr_val_t *val)
 {
     uint32_t value = REMAP_TO_RANGE_INVERSE(val->val.u16, STANDARD_TEMPERATURE_FACTOR);
     ESP_LOGI(TAG, "LED set temperature: %ld, %u", value, val->val.u16);
     app_driver_light_set_pwm(currentBrighness, val->val.u16);
-
-    return ESP_OK;
 }
 
-esp_err_t app_driver_attribute_update(uint32_t cluster_id,
+void app_driver_attribute_update(uint32_t cluster_id,
                                       uint32_t attribute_id, 
                                       esp_matter_attr_val_t *val)
 {
     switch (cluster_id) {
     case OnOff::Id:
         if (attribute_id == OnOff::Attributes::OnOff::Id) {
-            return app_driver_light_set_power(val);
+            app_driver_light_set_power(val);
         }
         break;
     case LevelControl::Id:
         if (attribute_id == LevelControl::Attributes::CurrentLevel::Id) {
-            return app_driver_light_set_brightness(val);
+            app_driver_light_set_brightness(val);
         }
         break;
     case ColorControl::Id:
         switch (attribute_id) {
         case ColorControl::Attributes::ColorTemperatureMireds::Id:
-            return app_driver_light_set_temperature(val);
+            app_driver_light_set_temperature(val);
         }
         break;
     }
-    return ESP_OK;
 }
 
-esp_err_t app_driver_light_set_defaults(uint16_t endpoint_id)
+void app_driver_light_set_defaults(uint16_t endpoint_id)
 {
-    esp_err_t err = ESP_OK;
     esp_matter_attr_val_t val = esp_matter_invalid(NULL);
     attribute_t *attribute;
 
@@ -187,7 +180,7 @@ esp_err_t app_driver_light_set_defaults(uint16_t endpoint_id)
         ESP_LOGI(TAG, "LED set default temperature");
         attribute = attribute::get(endpoint_id, ColorControl::Id, ColorControl::Attributes::ColorTemperatureMireds::Id);
         attribute::get_val(attribute, &val);
-        err |= app_driver_light_set_temperature(&val);
+        app_driver_light_set_temperature(&val);
         break;
     default:
         ESP_LOGE(TAG, "Color mode not supported");
@@ -197,14 +190,12 @@ esp_err_t app_driver_light_set_defaults(uint16_t endpoint_id)
     /* Setting power */
     attribute = attribute::get(endpoint_id, OnOff::Id, OnOff::Attributes::OnOff::Id);
     attribute::get_val(attribute, &val);
-    err |= app_driver_light_set_power(&val);
+    app_driver_light_set_power(&val);
 
     /* Setting brightness */
     attribute = attribute::get(endpoint_id, LevelControl::Id, LevelControl::Attributes::CurrentLevel::Id);
     attribute::get_val(attribute, &val);
-    err |= app_driver_light_set_brightness(&val);
-
-    return err;
+    app_driver_light_set_brightness(&val);
 }
 
 void app_driver_light_init()
@@ -219,11 +210,9 @@ void app_driver_light_init()
     
     for(int chan = 0; chan < 2; chan++) {
         ledc_channel_config(&ledcChannel[chan]);
-        // ledc_set_duty_and_update(ledcChannel[chan].speed_mode, ledcChannel[chan].channel, 0, 0);
     }
 
     xTaskCreate(fadeTask, "fadeTask", 2048, nullptr, 15, nullptr);
     
     ledc_fade_func_install(0);
-    // app_driver_light_set_pwm(CONFIG_DEFAULT_BRIGHTNESS, REMAP_TO_RANGE_INVERSE(CONFIG_COLOR_TEMP_DEFAULT, MATTER_TEMPERATURE_FACTOR));
 }

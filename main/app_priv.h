@@ -47,10 +47,8 @@ void app_driver_button_init(uint16_t *light_endpoint_id);
  * @param[in] attribute_id Attribute ID of the attribute.
  * @param[in] val Pointer to `esp_matter_attr_val_t`. Use appropriate elements as per the value type.
  *
- * @return ESP_OK on success.
- * @return error in case of failure.
  */
-esp_err_t app_driver_attribute_update(uint32_t cluster_id,
+void app_driver_attribute_update(uint32_t cluster_id,
                                       uint32_t attribute_id, 
                                       esp_matter_attr_val_t *val);
 
@@ -60,10 +58,8 @@ esp_err_t app_driver_attribute_update(uint32_t cluster_id,
  *
  * @param[in] endpoint_id Endpoint ID of the driver.
  *
- * @return ESP_OK on success.
- * @return error in case of failure.
  */
-esp_err_t app_driver_light_set_defaults(uint16_t endpoint_id);
+void app_driver_light_set_defaults(uint16_t endpoint_id);
 
 // Matter (chip) modules logging
 void matterLoggingCallback(const char * module, uint8_t category, const char * msg, va_list args);
