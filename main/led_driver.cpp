@@ -19,8 +19,8 @@ using namespace esp_matter;
 
 static const char *TAG = "led_driver";
 
-static const uint16_t MiredsWarm = REMAP_TO_RANGE_INVERSE(CONFIG_COLOR_TEMP_WARM, MATTER_TEMPERATURE_FACTOR);
-static const uint16_t MiredsCool = REMAP_TO_RANGE_INVERSE(CONFIG_COLOR_TEMP_COLD, MATTER_TEMPERATURE_FACTOR);
+static uint16_t MiredsWarm;
+static uint16_t MiredsCool;
 
 static uint8_t currentBrighness;
 static uint16_t currentColorTemperature;
@@ -28,7 +28,7 @@ static bool powerOn;
 
 static QueueHandle_t fadeEventQueue;
 
-ledc_timer_config_t ledc_timer = {
+static ledc_timer_config_t ledc_timer = {
     .speed_mode = LEDC_LOW_SPEED_MODE,        // timer mode
     .duty_resolution = LEDC_TIMER_12_BIT,     // resolution of PWM duty
     .timer_num = LEDC_TIMER_0,                // timer index
@@ -36,7 +36,7 @@ ledc_timer_config_t ledc_timer = {
     .clk_cfg = LEDC_AUTO_CLK,                 // Auto select the source clock
 };
 
-ledc_channel_config_t ledcChannel[] = {
+static ledc_channel_config_t ledcChannel[] = {
     {
         .gpio_num   = CONFIG_LED_WARM_GPIO,
         .speed_mode = LEDC_LOW_SPEED_MODE,
@@ -114,31 +114,31 @@ static void app_driver_light_set_pwm(uint8_t brightness, int16_t temperature) {
     xQueueSend(fadeEventQueue, pwm, 0);
 }
 
-static void app_driver_light_set_power(esp_matter_attr_val_t *val)
+static void app_driver_light_set_power(bool power)
 {
-    ESP_LOGI(TAG, "LED set power: %d", val->val.b);
-    if (val->val.b) {
+    ESP_LOGI(TAG, "LED set power: %d", power);
+    if (power) {
         // Power on
         // app_driver_light_set_pwm(0, currentColorTemperature);
     } else {
         // Power off
         app_driver_light_set_pwm(0, currentColorTemperature);
     }
-    powerOn = val->val.b;
+    powerOn = power;
 }
 
-static void app_driver_light_set_brightness(esp_matter_attr_val_t *val)
+static void app_driver_light_set_brightness(uint8_t brightness)
 {
-    // int value = REMAP_TO_RANGE(val->val.u8, MATTER_BRIGHTNESS, STANDARD_BRIGHTNESS);
-    ESP_LOGI(TAG, "LED set brightness: %d", val->val.u8);
-    app_driver_light_set_pwm(val->val.u8, currentColorTemperature);
+    // int value = REMAP_TO_RANGE(brightness, MATTER_BRIGHTNESS, STANDARD_BRIGHTNESS);
+    ESP_LOGI(TAG, "LED set brightness: %d", brightness);
+    app_driver_light_set_pwm(brightness, currentColorTemperature);
 }
 
-static void app_driver_light_set_temperature(esp_matter_attr_val_t *val)
+static void app_driver_light_set_temperature(uint16_t mireds)
 {
-    uint32_t value = REMAP_TO_RANGE_INVERSE(val->val.u16, STANDARD_TEMPERATURE_FACTOR);
-    ESP_LOGI(TAG, "LED set temperature: %ld, %u", value, val->val.u16);
-    app_driver_light_set_pwm(currentBrighness, val->val.u16);
+    uint32_t kelvin = REMAP_TO_RANGE_INVERSE(mireds, STANDARD_TEMPERATURE_FACTOR);
+    ESP_LOGI(TAG, "LED set temperature: %ld, %u", kelvin, mireds);
+    app_driver_light_set_pwm(currentBrighness, mireds);
 }
 
 void app_driver_attribute_update(uint32_t cluster_id,
@@ -148,17 +148,17 @@ void app_driver_attribute_update(uint32_t cluster_id,
     switch (cluster_id) {
     case OnOff::Id:
         if (attribute_id == OnOff::Attributes::OnOff::Id) {
-            app_driver_light_set_power(val);
+            app_driver_light_set_power(val->val.b);
         }
         break;
     case LevelControl::Id:
         if (attribute_id == LevelControl::Attributes::CurrentLevel::Id) {
-            app_driver_light_set_brightness(val);
+            app_driver_light_set_brightness(val->val.u8);
         }
         break;
     case ColorControl::Id:
         if (attribute_id == ColorControl::Attributes::ColorTemperatureMireds::Id) {
-            app_driver_light_set_temperature(val);
+            app_driver_light_set_temperature(val->val.u16);
         }
         break;
     }
@@ -177,9 +177,15 @@ void app_driver_light_set_defaults(uint16_t endpoint_id)
     case (uint8_t)ColorControl::ColorMode::kColorTemperature:
         /* Setting temperature */
         ESP_LOGI(TAG, "LED set default temperature");
+        attribute = attribute::get(endpoint_id, ColorControl::Id, ColorControl::Attributes::ColorTempPhysicalMaxMireds::Id);
+        attribute::get_val(attribute, &val);
+        MiredsWarm = val.val.u16;
+        attribute = attribute::get(endpoint_id, ColorControl::Id, ColorControl::Attributes::ColorTempPhysicalMinMireds::Id);
+        attribute::get_val(attribute, &val);
+        MiredsCool = val.val.u16;
         attribute = attribute::get(endpoint_id, ColorControl::Id, ColorControl::Attributes::ColorTemperatureMireds::Id);
         attribute::get_val(attribute, &val);
-        app_driver_light_set_temperature(&val);
+        app_driver_light_set_temperature(val.val.u16);
         break;
     default:
         ESP_LOGE(TAG, "Color mode not supported");
@@ -189,12 +195,12 @@ void app_driver_light_set_defaults(uint16_t endpoint_id)
     /* Setting power */
     attribute = attribute::get(endpoint_id, OnOff::Id, OnOff::Attributes::OnOff::Id);
     attribute::get_val(attribute, &val);
-    app_driver_light_set_power(&val);
+    app_driver_light_set_power(val.val.b);
 
     /* Setting brightness */
     attribute = attribute::get(endpoint_id, LevelControl::Id, LevelControl::Attributes::CurrentLevel::Id);
     attribute::get_val(attribute, &val);
-    app_driver_light_set_brightness(&val);
+    app_driver_light_set_brightness(val.val.u8);
 }
 
 void app_driver_light_init()
