@@ -24,7 +24,8 @@ static uint16_t MiredsCool;
 
 static uint8_t currentBrighness;
 static uint16_t currentColorTemperature;
-static bool powerOn;
+static bool currentPowerState;
+static uint32_t currentPWM[2];
 
 static QueueHandle_t fadeEventQueue;
 
@@ -36,7 +37,7 @@ static ledc_timer_config_t ledc_timer = {
     .clk_cfg = LEDC_AUTO_CLK,                 // Auto select the source clock
 };
 
-static ledc_channel_config_t ledcChannel[] = {
+static ledc_channel_config_t ledcChannel[2] = {
     {
         .gpio_num   = CONFIG_LED_WARM_GPIO,
         .speed_mode = LEDC_LOW_SPEED_MODE,
@@ -56,29 +57,18 @@ static ledc_channel_config_t ledcChannel[] = {
 };
 
 void fadeTask( void *pvParameters ) {
-    int32_t current[2];
-    int32_t target[2];
-    int32_t duty[2];
+    uint32_t pwm[3];
     int fadeTime;
-    current[0] = current[1] = 0;
 
     ESP_LOGI(TAG, "Init fade task chan");
     for( ;; ) {
-        if (xQueueReceive(fadeEventQueue, &target, portMAX_DELAY)) {
-            fadeTime = 0;
+        if (xQueueReceive(fadeEventQueue, &pwm, portMAX_DELAY)) {
+            fadeTime = pwm[2];
             for(int chan = 0; chan < 2; chan++) {
-                int time = abs(target[chan] - current[chan]) / 5;
-                // if (time < 100) time = 100;
                 // const int duty = CIEL_10_12[fade->target];
-                duty[chan] = target[chan];
-                ESP_LOGI(TAG, "duty[%d] %ld->%ld %ld t=%d",chan ,current[chan], target[chan], duty[chan], time);
-                current[chan] = target[chan];
-                if (time > fadeTime) {
-                    fadeTime = time;
-                }
+                int duty = pwm[chan];
+                ledc_set_fade_with_time(ledcChannel[chan].speed_mode, ledcChannel[chan].channel, duty, fadeTime);
             }
-            ledc_set_fade_with_time(ledcChannel[0].speed_mode, ledcChannel[0].channel, duty[0], fadeTime);
-            ledc_set_fade_with_time(ledcChannel[1].speed_mode, ledcChannel[1].channel, duty[1], fadeTime);
             ledc_fade_start(ledcChannel[0].speed_mode, ledcChannel[0].channel, LEDC_FADE_NO_WAIT);
             ledc_fade_start(ledcChannel[1].speed_mode, ledcChannel[1].channel, LEDC_FADE_WAIT_DONE);
         }
@@ -90,7 +80,7 @@ static void app_driver_light_set_pwm(uint8_t brightness, int16_t temperature) {
     currentBrighness = brightness;
     currentColorTemperature = temperature;
 
-    if (!powerOn) {
+    if (!currentPowerState) {
         return;
     }
     float tempCoeff = float(temperature - MiredsCool) / float(MiredsWarm - MiredsCool) * 2;
@@ -104,10 +94,26 @@ static void app_driver_light_set_pwm(uint8_t brightness, int16_t temperature) {
         coldCoeff = 1;
     }
     
-    int32_t dutyMax = 1 << ledc_timer.duty_resolution;
-    int32_t pwm[2];
+    uint32_t dutyMax = 1 << ledc_timer.duty_resolution;
+    uint32_t pwm[3];
     pwm[0] = warmCoeff * dutyMax;
     pwm[1] = coldCoeff * dutyMax;
+    uint32_t fadeTime = 0;
+    for(int chan = 0; chan < 2; chan++) {
+        uint32_t time = 0;
+        if (currentPWM[chan] > pwm[chan]) {
+            time = (currentPWM[chan] - pwm[chan]) / 5;
+        } else {
+            time = (pwm[chan] - currentPWM[chan]) / 5;
+        }
+        // const int duty = CIEL_10_12[fade->target];
+        currentPWM[chan] = pwm[chan];
+        if (time > fadeTime) {
+            fadeTime = time;
+        }
+    }
+    pwm[2] = fadeTime;
+
     ESP_LOGI(TAG, "tempCoeff: %f, brCoeff: %f, max duty: %ld", tempCoeff, brightnessCoeff, dutyMax);
     ESP_LOGI(TAG, "warmCoeff: %f, coldCoeff: %f", warmCoeff, coldCoeff);
     
@@ -124,7 +130,7 @@ static void app_driver_light_set_power(bool power)
         // Power off
         app_driver_light_set_pwm(0, currentColorTemperature);
     }
-    powerOn = power;
+    currentPowerState = power;
 }
 
 static void app_driver_light_set_brightness(uint8_t brightness)
@@ -207,11 +213,11 @@ void app_driver_light_init()
 {
     currentBrighness = 1;
     currentColorTemperature = (MiredsWarm - MiredsCool) / 2;
-    powerOn = true;
+    currentPowerState = true;
 
     ledc_timer_config(&ledc_timer);
     
-    fadeEventQueue = xQueueCreate(10, sizeof(int64_t));
+    fadeEventQueue = xQueueCreate(10, sizeof(int32_t)*3);
     
     for(int chan = 0; chan < 2; chan++) {
         ledc_channel_config(&ledcChannel[chan]);
