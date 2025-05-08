@@ -1,5 +1,5 @@
 /*
-    Led driver
+    Light driver
 */
 
 #include <esp_log.h>
@@ -22,7 +22,7 @@ static const char *TAG = "led_driver";
 static uint16_t MiredsWarm;
 static uint16_t MiredsCool;
 
-static uint8_t currentBrighness;
+static uint8_t currentBrighness = false;
 static uint16_t currentColorTemperature;
 static bool currentPowerState;
 static uint32_t currentPWM[2];
@@ -211,10 +211,6 @@ void app_driver_light_set_defaults(uint16_t endpoint_id)
 
 void app_driver_light_init()
 {
-    currentBrighness = 1;
-    currentColorTemperature = (MiredsWarm - MiredsCool) / 2;
-    currentPowerState = true;
-
     ledc_timer_config(&ledc_timer);
     
     fadeEventQueue = xQueueCreate(10, sizeof(int32_t)*3);

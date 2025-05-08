@@ -18,6 +18,8 @@
 
 #include <app/server/CommissioningWindowManager.h>
 #include <app/server/Server.h>
+#include <app/server/OnboardingCodesUtil.h>
+#include <setup_payload/SetupPayload.h>
 
 static const char *TAG = "app_main";
 uint16_t light_endpoint_id = 0;
@@ -171,6 +173,14 @@ extern "C" void app_main()
 
     chip::Logging::SetLogRedirectCallback(&matterLoggingCallback);
 
+    // esp_log_level_set("chip[SVR]", ESP_LOG_ERROR);
+    esp_log_level_set("chip[DIS]", ESP_LOG_ERROR);
+    esp_log_level_set("chip[DL]", ESP_LOG_ERROR);
+    esp_log_level_set("chip[DMG]", ESP_LOG_ERROR);
+    esp_log_level_set("chip[IN]", ESP_LOG_ERROR);
+    esp_log_level_set("chip[TS]", ESP_LOG_ERROR);
+    esp_log_level_set("chip[ZCL]", ESP_LOG_ERROR);
+
     esp_log_level_set("wifi", ESP_LOG_ERROR);
     esp_log_level_set("ROUTE_HOOK", ESP_LOG_ERROR);
     esp_log_level_set("esp_matter_attribute", ESP_LOG_ERROR);
@@ -261,6 +271,7 @@ extern "C" void app_main()
         ESP_LOGI(TAG, "Unprovisioned");
     }
     ESP_LOGI(TAG, "Fabric count %u", chip::Server::GetInstance().GetFabricTable().FabricCount());
+    PrintOnboardingCodes(chip::RendezvousInformationFlag::kBLE);
 
 #if CONFIG_ENABLE_CHIP_SHELL
     esp_matter::console::diagnostics_register_commands();
