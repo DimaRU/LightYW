@@ -94,14 +94,24 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg)
                 constexpr auto kTimeoutSeconds = chip::System::Clock::Seconds16(k_timeout_seconds);
                 if (!commissionMgr.IsCommissioningWindowOpen())
                 {
-                    /* After removing last fabric, this example does not remove the Wi-Fi credentials
-                     * and still has IP connectivity so, only advertising on DNS-SD.
-                     */
-                    CHIP_ERROR err = commissionMgr.OpenBasicCommissioningWindow(kTimeoutSeconds,
-                                                    chip::CommissioningWindowAdvertisement::kDnssdOnly);
-                    if (err != CHIP_NO_ERROR)
-                    {
-                        ESP_LOGE(TAG, "Failed to open commissioning window, err:%" CHIP_ERROR_FORMAT, err.Format());
+                    // Initialise BLE manager
+                    CHIP_ERROR err = chip::DeviceLayer::Internal::BLEMgr().Init();
+                    if (err != CHIP_NO_ERROR) {
+                        ESP_LOGE(TAG, "BLEManager initialization failed: %" CHIP_ERROR_FORMAT, err.Format());
+                    }  
+                    // Clear Wifi credentials if any
+                    if (chip::DeviceLayer::ConnectivityMgr().IsWiFiStationProvisioned()) {
+                        chip::DeviceLayer::ConnectivityMgr().ClearWiFiStationProvision();
+                    }
+                    // Clear Thread provision if any
+                    if (chip::DeviceLayer::ConnectivityMgr().IsThreadProvisioned()) {
+                        chip::DeviceLayer::ConnectivityMgr().ErasePersistentInfo();
+                    }
+				    // Advertise over BLE
+                    chip::DeviceLayer::ConnectivityMgr().SetBLEAdvertisingEnabled(true);
+                    err = commissionMgr.OpenBasicCommissioningWindow(kTimeoutSeconds);
+                    if (err != CHIP_NO_ERROR) {
+                        ESP_LOGE(TAG, "Failed to open commissioning window: %" CHIP_ERROR_FORMAT, err.Format());
                     }
                 }
             }
