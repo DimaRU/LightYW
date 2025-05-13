@@ -33,11 +33,15 @@ void matterLoggingCallback(const char * module, uint8_t category, const char * m
     snprintf(tag, sizeof(tag), "chip[%s]", module);
     tag[sizeof(tag) - 1] = 0;
 
+    esp_log_level_t level_for_tag = esp_log_level_get(tag);
+
+    if (ESP_LOG_NONE == level_for_tag) {
+        return;
+    }
     switch (category)
     {
     case chip::Logging::kLogCategory_Error:
         {
-            esp_log_level_t level_for_tag = esp_log_level_get(tag);
             if (ESP_LOG_NONE != level_for_tag && ESP_LOG_ERROR <= level_for_tag) {
                     printf(LOG_COLOR_E "E (%" PRIu32 ") %s: ", esp_log_timestamp(), tag);
                     esp_log_writev(ESP_LOG_ERROR, tag, msg, v);
@@ -49,7 +53,6 @@ void matterLoggingCallback(const char * module, uint8_t category, const char * m
     case chip::Logging::kLogCategory_Progress:
     default: 
         {
-            esp_log_level_t level_for_tag = esp_log_level_get(tag);
             if (ESP_LOG_NONE != level_for_tag && ESP_LOG_INFO <= level_for_tag) {
                 printf(LOG_COLOR_I "I (%" PRIu32 ") %s: ", esp_log_timestamp(), tag);
                 esp_log_writev(ESP_LOG_INFO, tag, msg, v);
@@ -60,7 +63,6 @@ void matterLoggingCallback(const char * module, uint8_t category, const char * m
 
     case chip::Logging::kLogCategory_Detail:
         {
-            esp_log_level_t level_for_tag = esp_log_level_get(tag);
             if (ESP_LOG_NONE != level_for_tag && ESP_LOG_DEBUG <= level_for_tag) {
                 printf(LOG_COLOR_D "D (%" PRIu32 ") %s: ", esp_log_timestamp(), tag);
                 esp_log_writev(ESP_LOG_DEBUG, tag, msg, v);

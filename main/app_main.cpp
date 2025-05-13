@@ -59,6 +59,28 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg)
             break;
         }
         break;
+        
+    case chip::DeviceLayer::DeviceEventType::kThreadConnectivityChange:
+        ESP_LOGI(TAG, "Thread Connectivity Change");
+        break;
+    case chip::DeviceLayer::DeviceEventType::kThreadStateChange:
+        if (event->ThreadStateChange.RoleChanged) {
+            ESP_LOGI(TAG, "Thread State Change: Role Changed");
+        } else if (event->ThreadStateChange.AddressChanged) {
+            ESP_LOGI(TAG, "Thread State Change: Address Changed");
+        } else if (event->ThreadStateChange.ChildNodesChanged) {
+            ESP_LOGI(TAG, "Thread State Change: Child Nodes Changed");
+        } else if (event->ThreadStateChange.NetDataChanged) {
+            ESP_LOGI(TAG, "Thread State Change: Net Data Changed");
+        } else {
+            ESP_LOGI(TAG, "Thread State Change");
+        }
+        break;
+    case chip::DeviceLayer::DeviceEventType::kOperationalNetworkEnabled:
+
+    case chip::DeviceLayer::DeviceEventType::kThreadInterfaceStateChange:
+        ESP_LOGI(TAG, "Thread InterfaceState Change");
+        break;
 
     case chip::DeviceLayer::DeviceEventType::kCommissioningComplete:
         ESP_LOGI(TAG, "Commissioning complete, fabric count: %u", chip::Server::GetInstance().GetFabricTable().FabricCount());
@@ -101,18 +123,21 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg)
                     }  
                     // Clear Wifi credentials if any
                     if (chip::DeviceLayer::ConnectivityMgr().IsWiFiStationProvisioned()) {
+                        ESP_LOGI(TAG, "ClearWiFiStationProvision");
                         chip::DeviceLayer::ConnectivityMgr().ClearWiFiStationProvision();
                     }
                     // Clear Thread provision if any
                     if (chip::DeviceLayer::ConnectivityMgr().IsThreadProvisioned()) {
+                        ESP_LOGI(TAG, "ErasePersistentInfo");
                         chip::DeviceLayer::ConnectivityMgr().ErasePersistentInfo();
                     }
 				    // Advertise over BLE
-                    chip::DeviceLayer::ConnectivityMgr().SetBLEAdvertisingEnabled(true);
-                    err = commissionMgr.OpenBasicCommissioningWindow(kTimeoutSeconds);
-                    if (err != CHIP_NO_ERROR) {
-                        ESP_LOGE(TAG, "Failed to open commissioning window: %" CHIP_ERROR_FORMAT, err.Format());
-                    }
+                    // chip::DeviceLayer::ConnectivityMgr().SetBLEAdvertisingEnabled(true);
+                    // err = commissionMgr.OpenBasicCommissioningWindow(kTimeoutSeconds);
+                    // if (err != CHIP_NO_ERROR) {
+                    //     ESP_LOGE(TAG, "Failed to open commissioning window: %" CHIP_ERROR_FORMAT, err.Format());
+                    // }
+                    esp_restart();
                 }
             }
         break;
@@ -185,11 +210,14 @@ extern "C" void app_main()
 
     // esp_log_level_set("chip[SVR]", ESP_LOG_ERROR);
     esp_log_level_set("chip[DIS]", ESP_LOG_ERROR);
-    esp_log_level_set("chip[DL]", ESP_LOG_ERROR);
     esp_log_level_set("chip[DMG]", ESP_LOG_ERROR);
     esp_log_level_set("chip[IN]", ESP_LOG_ERROR);
     esp_log_level_set("chip[TS]", ESP_LOG_ERROR);
     esp_log_level_set("chip[ZCL]", ESP_LOG_ERROR);
+    esp_log_level_set("chip[EM]", ESP_LOG_ERROR);
+    esp_log_level_set("chip[DL]", ESP_LOG_ERROR);
+    esp_log_level_set("CHIP[DL]", ESP_LOG_ERROR);
+    esp_log_level_set("NimBLE", ESP_LOG_ERROR);
 
     esp_log_level_set("wifi", ESP_LOG_ERROR);
     esp_log_level_set("ROUTE_HOOK", ESP_LOG_ERROR);
@@ -208,7 +236,7 @@ extern "C" void app_main()
     node_t *node = node::create(&node_config, app_attribute_update_cb, app_identification_cb);
     ABORT_APP_ON_FAILURE(node != nullptr, ESP_LOGE(TAG, "Failed to create Matter node"));
     
-    extended_color_light::config_t light_config;
+    color_temperature_light::config_t light_config;
     light_config.on_off.on_off = DEFAULT_POWER;
     light_config.on_off.lighting.start_up_on_off = nullptr;
     light_config.level_control.current_level = CONFIG_DEFAULT_BRIGHTNESS;
@@ -226,7 +254,7 @@ extern "C" void app_main()
     ESP_LOGI(TAG, "Color temp min - max: %u - %u", light_config.color_control.color_temperature.color_temp_physical_min_mireds, light_config.color_control.color_temperature.color_temp_physical_max_mireds);
 
     // endpoint handles can be used to add/modify clusters.
-    endpoint_t *endpoint = extended_color_light::create(node, &light_config, ENDPOINT_FLAG_NONE, nullptr);
+    endpoint_t *endpoint = color_temperature_light::create(node, &light_config, ENDPOINT_FLAG_NONE, nullptr);
     ABORT_APP_ON_FAILURE(endpoint != nullptr, ESP_LOGE(TAG, "Failed to create extended color light endpoint"));
     
     light_endpoint_id = endpoint::get_id(endpoint);
