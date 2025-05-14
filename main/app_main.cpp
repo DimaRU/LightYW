@@ -61,9 +61,20 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg)
         break;
         
     case chip::DeviceLayer::DeviceEventType::kThreadConnectivityChange:
-        ESP_LOGI(TAG, "Thread Connectivity Change");
+        switch (event->ThreadConnectivityChange.Result) {
+            case chip::DeviceLayer::ConnectivityChange::kConnectivity_Established:
+                ESP_LOGI(TAG, "Thread Connectivity established");
+                break;
+            case chip::DeviceLayer::ConnectivityChange::kConnectivity_Lost:
+                ESP_LOGI(TAG, "Thread Connectivity lost");
+                break;
+            case chip::DeviceLayer::ConnectivityChange::kConnectivity_NoChange:
+                ESP_LOGI(TAG, "Thread Connectivity no change");
+                break;
+        }
         break;
-    case chip::DeviceLayer::DeviceEventType::kThreadStateChange:
+
+        case chip::DeviceLayer::DeviceEventType::kThreadStateChange:
         if (event->ThreadStateChange.RoleChanged) {
             ESP_LOGI(TAG, "Thread State Change: Role Changed");
         } else if (event->ThreadStateChange.AddressChanged) {
