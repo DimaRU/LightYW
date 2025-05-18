@@ -1,0 +1,9 @@
+VENDOR_ID=FFF2
+VENDOR_NAME="Telcontar"
+PRODUCT_ID=8001
+PRODUCT_NAME="LightWarmCold"
+HW_VER=1
+HW_VER_STR="1.0"
+SERIAL_NUM="0001"
+PRODUCT_LABEL="LightWarmCold"
+PRODUCT_URL="https://github.com/DimaRU/LightWarmCold"

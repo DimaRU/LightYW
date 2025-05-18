@@ -1,0 +1,20 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Dump NVS Partition",
+            "type": "shell",
+            "command": "${config:idf.espIdfPath}/components/nvs_flash/nvs_partition_tool/nvs_tool.py $(find ./factory_partition -name \"*-partition.bin\") -f text -d minimal",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "options": {
+                "env": {
+                    "ESP_MATTER_PATH": "${config:idf.espMatterPath}"
+                }
+            },
+            "problemMatcher": []
+        }
+    ]
+}
