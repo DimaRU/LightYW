@@ -1,15 +1,15 @@
 {
     "C_Cpp.intelliSenseEngine": "default",
     "idf.customExtraVars": {
-        "IDF_TARGET": "esp32h2"
+        "IDF_TARGET": "esp32c6"
     },
     "idf.openOcdConfigs": [
-        "board/esp32h2-ftdi.cfg"
+        "board/esp32c6-ftdi.cfg"
     ],
     "idf.flashType": "UART",
     "idf.enableSizeTaskAfterBuildTask":false,
     "idf.port": "/dev/tty.usbmodem2401",
-    "idf.customTask": "parttool.py --partition-table-file partitions.csv write_partition --partition-name=\"factory\" --input=$(find ./factory_partition -name \"*-partition.bin\")",
+    "idf.customTask": "parttool.py --port ${config:idf.port} --partition-table-file partitions.csv write_partition --partition-name=\"factory\" --input=$(find ./factory_partition -name \"*-partition.bin\")",
     "files.associations": {
         "*.ipp": "cpp",
         "*.inc": "cpp",

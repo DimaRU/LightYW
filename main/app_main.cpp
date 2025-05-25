@@ -308,6 +308,12 @@ extern "C" void app_main()
     set_openthread_platform_config(&config);
 #endif
 
+    auto basic_information_cluster = cluster::get(chip::kRootEndpointId, BasicInformation::Id);
+
+    esp_matter::cluster::basic_information::attribute::create_serial_number(basic_information_cluster, NULL, 0);
+    esp_matter::cluster::basic_information::attribute::create_product_label(basic_information_cluster, NULL, 0);
+    esp_matter::cluster::basic_information::attribute::create_product_url(basic_information_cluster, NULL, 0);
+    
     /* Matter start */
     err = esp_matter::start(app_event_cb);
     ABORT_APP_ON_FAILURE(err == ESP_OK, ESP_LOGE(TAG, "Failed to start Matter, err:%d", err));
