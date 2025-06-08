@@ -123,33 +123,33 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg)
             if (chip::Server::GetInstance().GetFabricTable().FabricCount() == 0)
             {
                 ESP_LOGI(TAG, "Last fabric removed");
-                chip::CommissioningWindowManager & commissionMgr = chip::Server::GetInstance().GetCommissioningWindowManager();
-                constexpr auto kTimeoutSeconds = chip::System::Clock::Seconds16(k_timeout_seconds);
-                if (!commissionMgr.IsCommissioningWindowOpen())
-                {
-                    // Initialise BLE manager
-                    CHIP_ERROR err = chip::DeviceLayer::Internal::BLEMgr().Init();
-                    if (err != CHIP_NO_ERROR) {
-                        ESP_LOGE(TAG, "BLEManager initialization failed: %" CHIP_ERROR_FORMAT, err.Format());
-                    }  
-                    // Clear Wifi credentials if any
-                    if (chip::DeviceLayer::ConnectivityMgr().IsWiFiStationProvisioned()) {
-                        ESP_LOGI(TAG, "ClearWiFiStationProvision");
-                        chip::DeviceLayer::ConnectivityMgr().ClearWiFiStationProvision();
-                    }
-                    // Clear Thread provision if any
-                    if (chip::DeviceLayer::ConnectivityMgr().IsThreadProvisioned()) {
-                        ESP_LOGI(TAG, "ErasePersistentInfo");
-                        chip::DeviceLayer::ConnectivityMgr().ErasePersistentInfo();
-                    }
+                // Initialise BLE manager
+                CHIP_ERROR err = chip::DeviceLayer::Internal::BLEMgr().Init();
+                if (err != CHIP_NO_ERROR) {
+                    ESP_LOGE(TAG, "BLEManager initialization failed: %" CHIP_ERROR_FORMAT, err.Format());
+                }  
+                // Clear Wifi credentials if any
+                if (chip::DeviceLayer::ConnectivityMgr().IsWiFiStationProvisioned()) {
+                    ESP_LOGI(TAG, "ClearWiFiStationProvision");
+                    chip::DeviceLayer::ConnectivityMgr().ClearWiFiStationProvision();
+                }
+                // Clear Thread provision if any
+                if (chip::DeviceLayer::ConnectivityMgr().IsThreadProvisioned()) {
+                    ESP_LOGI(TAG, "ErasePersistentInfo");
+                    chip::DeviceLayer::ConnectivityMgr().ErasePersistentInfo();
+                }
+                esp_restart();
+                // if (!commissionMgr.IsCommissioningWindowOpen())
+                // {
 				    // Advertise over BLE
+                    // chip::CommissioningWindowManager & commissionMgr = chip::Server::GetInstance().GetCommissioningWindowManager();
+                    // constexpr auto kTimeoutSeconds = chip::System::Clock::Seconds16(k_timeout_seconds);
                     // chip::DeviceLayer::ConnectivityMgr().SetBLEAdvertisingEnabled(true);
                     // err = commissionMgr.OpenBasicCommissioningWindow(kTimeoutSeconds);
                     // if (err != CHIP_NO_ERROR) {
                     //     ESP_LOGE(TAG, "Failed to open commissioning window: %" CHIP_ERROR_FORMAT, err.Format());
                     // }
-                    esp_restart();
-                }
+                // }
             }
         break;
         }
