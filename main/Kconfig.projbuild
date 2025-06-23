@@ -6,28 +6,24 @@ menu "LightWarmCold Matter Configuration"
 
     config COLOR_TEMP_WARM
         int "Warm led color temperature"
-        default 3000
+        default 2200
         help
             Warm led color temperature in kelvins (min)
 
     config COLOR_TEMP_COLD
         int "Cold led color temperature"
-        default 6500
+        default 7000
         help
             Cold led color temperature in kelvins (max)
 
     config COLOR_TEMP_DEFAULT
         int "Startup color temperature"
-        default 4750
+        default 4600
         help 
             Startup color temperature in kelvins
 endmenu
 
 menu "LightWarmCold Hardware Configuration"
-    config BUTTON_GPIO
-        int "Button GPIO number"
-        default 9
-        
     config LED_WARM_GPIO
         int "Warm led GPIO number"
         default 4
@@ -40,4 +36,8 @@ menu "LightWarmCold Hardware Configuration"
         int "Led PWM frequency"
         default 4000
 
+    config BUTTON_GPIO
+        int "Button GPIO number"
+        default 9
+        
 endmenu
