@@ -246,6 +246,11 @@ extern "C" void app_main()
     /* Initialize led driver */
     app_driver_light_init();
 
+    // Print config
+    ESP_LOGI(TAG, "Warm led pin: %i", CONFIG_LED_WARM_GPIO);
+    ESP_LOGI(TAG, "Cold led pin: %i", CONFIG_LED_COLD_GPIO);
+    ESP_LOGI(TAG, "On/off/reset button pin: %i", CONFIG_BUTTON_GPIO);
+
     /* Create a Matter node and add the mandatory Root Node device type on endpoint 0 */
     node::config_t node_config;
     
